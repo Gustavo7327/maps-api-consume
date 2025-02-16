@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleção de Local no Mapa</title>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="alternative.css">
+    <style>
+        #mapa1, #mapa2 {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+    <script>
+        let map, marker;
+        let selectedLat, selectedLng;
+
+        function initMap() {
+            map = L.map('mapa1').setView([-23.55052, -46.6333], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            marker = L.marker([-23.55052, -46.6333]).addTo(map);
+
+            map.on('click', function (e) {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+                
+                marker.setLatLng([selectedLat, selectedLng]);
+                
+                document.getElementById("lat").textContent = selectedLat.toFixed(6);
+                document.getElementById("lng").textContent = selectedLng.toFixed(6);
+            });
+        }
+
+        function buscarLocal() {
+            let endereco = document.getElementById("endereco").value;
+            if (endereco.trim() !== "") {
+                let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            let lat = parseFloat(data[0].lat);
+                            let lon = parseFloat(data[0].lon);
+                            
+                            map.setView([lat, lon], 13);
+                            marker.setLatLng([lat, lon]);
+                            
+                            selectedLat = lat;
+                            selectedLng = lon;
+                            
+                            document.getElementById("lat").textContent = lat.toFixed(6);
+                            document.getElementById("lng").textContent = lon.toFixed(6);
+                        } else {
+                            alert("Endereço não encontrado. Tente outro local.");
+                        }
+                    })
+                    .catch(error => console.error("Erro ao buscar localização:", error));
+            } else {
+                alert("Digite um endereço válido.");
+            }
+        }
+
+        function renderizarMapa2() {
+            if (selectedLat !== undefined && selectedLng !== undefined) {
+                let mapa2 = document.getElementById("mapa2");
+                let url = `https://www.google.com/maps?q=${selectedLat},${selectedLng}&output=embed`;
+                mapa2.innerHTML = `<iframe width="100%" height="400" src="${url}" allowfullscreen></iframe>`;
+            } else {
+                alert("Selecione um local no primeiro mapa antes de renderizar no segundo mapa!");
+            }
+        }
+
+        window.onload = initMap;
+    </script>
+</head>
+<body>
+    <h2>Buscar Local</h2>
+    <input type="text" id="endereco" placeholder="Digite uma rua ou cidade">
+    <button onclick="buscarLocal()">Buscar</button>
+    
+    <h2>Mapa 1 - Selecione um local</h2>
+    <div id="mapa1"></div>
+    
+    <p>Latitude: <span id="lat">---</span>, Longitude: <span id="lng">---</span></p>
+    <button onclick="renderizarMapa2()">Renderizar no Mapa 2</button>
+    
+    <h2>Mapa 2 - Local Selecionado</h2>
+    <div id="mapa2"></div>
+</body>
+</html>
