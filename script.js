@@ -1,10 +1,24 @@
-function renderizarMapa2() {
-    let endereco = document.getElementById("endereco").value;
-    if (endereco.trim() !== "") {
-        let mapa2 = document.getElementById("mapa2");
-        let url = `https://www.google.com/maps?q=${encodeURIComponent(endereco)}&output=embed`;
-        mapa2.innerHTML = `<iframe width="100%" height="400" src="${url}" allowfullscreen></iframe>`;
+function obterMinhaLocalizacao() {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                let latitude = position.coords.latitude;
+                let longitude = position.coords.longitude;
+
+                console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+                alert(`Sua localização:\nLatitude: ${latitude}, Longitude: ${longitude}`);
+
+                // Exibir mapa com a posição do usuário
+                let mapa2 = document.getElementById("mapa2");
+                mapa2.innerHTML = `<iframe width="100%" height="400" 
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=${longitude},${latitude},${longitude},${latitude}&layer=mapnik&marker=${latitude},${longitude}" 
+                    allowfullscreen></iframe>`;
+            },
+            function (error) {
+                alert("Erro ao obter localização: " + error.message);
+            }
+        );
     } else {
-        alert("Digite um endereço válido para renderizar no mapa!");
+        alert("Geolocalização não é suportada pelo seu navegador.");
     }
 }
